@@ -12,15 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Delete test.txt
+      - name: Create Pull Request
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
-          git checkout -b del_test
+          BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/[^a-zA-Z0-9._-]/-/g')
+          git checkout -b $BRANCH_NAME
           git rm test.txt
-          git commit -m "[del_test] Remove test.txt"
-          git push origin del_test
-      - name: Create Pull Request
-        run: gh pr create --base master --head del_test --title "[del_test] Remove test.txt" --body "Remove test.txt"
+          git commit -m "Remove test.txt"
+          git push origin $BRANCH_NAME
+          TITLE=$(head -n 1 pr_message.txt)
+          BODY=$(tail -n +2 pr_message.txt)
+          gh pr create --base master --head $BRANCH_NAME --title "$TITLE" --body "$BODY"
         env:
           GH_TOKEN: ${{ secrets.FINE_GRAINED_PERSONAL_ACCESS_TOKEN }}
